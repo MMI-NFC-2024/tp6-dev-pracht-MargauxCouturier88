@@ -2,7 +2,6 @@
 import Layout from "../../layouts/Layout.astro";
 import penguinsData from "../../assets/penguins.json";
 
-// Extraire automatiquement les espèces
 const especes = [...new Set(penguinsData.map(p => p.species))];
 ---
 
@@ -14,7 +13,7 @@ const especes = [...new Set(penguinsData.map(p => p.species))];
     </h1>
     
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700">Espèces disponibles:</h2>
+      <h2 class="text-xl font-semibold mb-4 text-gray-700">Espèces différentes :</h2>
       
       <ul class="space-y-3">
         {especes.map(espece => (
