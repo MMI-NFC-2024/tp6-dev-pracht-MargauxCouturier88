@@ -1,21 +1,121 @@
 ---
-import PlotFigure from "../components/PlotFigure.astro";
 import Layout from "../layouts/Layout.astro";
-import * as Plot from "@observablehq/plot";
+import PlotFigure from "../components/PlotFigure.astro";
 import penguins from "../assets/penguins.json";
+import * as Plot from "@observablehq/plot";
+
+const especes = [...new Set(penguins.map(p => p.species))];
+
+const graphiquesOptions = especes.map(espece => {
+  const donnees = penguins.filter(p => p.species === espece);
+  
+  const count = donnees.length;
+  const avgMass = (donnees.reduce((sum, p) => sum + (p.body_mass_g || 0), 0) / count).toFixed(0);
+  
+  return {
+    espece,
+    count,
+    avgMass,
+    options: {
+      marks: [
+        Plot.dot(donnees, {
+          x: "flipper_length_mm",
+          y: "body_mass_g",
+          fill: "island",
+          r: 5,
+          opacity: 0.7
+        })
+      ],
+      grid: true,
+      color: { legend: true },
+      x: { label: "Longueur nageoire (mm)" },
+      y: { label: "Masse corporelle (g)" }
+    }
+  };
+});
 ---
 
-<Layout>
-  <h1 class="text-2xl">Test Astro et Plot (Observablehq)</h1>
-  <PlotFigure
-    options={{
-      marks: [
-        Plot.dot(penguins, {
-          x: "culmen_length_mm",
-          y: "culmen_depth_mm",
-          stroke: "species",
-        }),
-      ],
-    }}
-  />
+<Layout title="Pingouins de Palmer">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">TD6 - Penguins</h1>
+      <p class="text-gray-600">
+        Dataset: <span class="font-semibold text-blue-600">{penguins.length}</span> penguins, 
+        <span class="font-semibold text-blue-600">{especes.length}</span> espèces
+      </p>
+    </div>
+    
+    <div class="border-b border-gray-200 mb-6">
+      <nav class="flex space-x-2" role="tablist">
+        {especes.map((espece, index) => (
+          <button
+            class={`px-6 py-3 font-medium text-sm rounded-t-lg transition-all ${
+              index === 0 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            data-tab={espece}
+            role="tab"
+          >
+            {espece}
+          </button>
+        ))}
+      </nav>
+    </div>
+    
+    {graphiquesOptions.map((item, index) => (
+      <div
+        class={`tab-content ${index === 0 ? 'block' : 'hidden'}`}
+        data-content={item.espece}
+      >
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Espèce : {item.espece}</h2>
+          
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-600">
+              <p class="text-sm text-gray-600">Nombre d'individus</p>
+              <p class="text-3xl font-bold text-blue-600">{item.count}</p>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-600">
+              <p class="text-sm text-gray-600">Masse moyenne</p>
+              <p class="text-3xl font-bold text-purple-600">{item.avgMass} g</p>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6">
+            <PlotFigure options={item.options} />
+          </div>
+        </div>
+      </div>
+    ))}
+    
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const boutons = document.querySelectorAll('[role="tab"]');
+      const contenus = document.querySelectorAll('.tab-content');
+      
+      boutons.forEach(bouton => {
+        bouton.addEventListener('click', () => {
+          const espece = (bouton as HTMLElement).dataset.tab;
+          
+          boutons.forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('bg-gray-100', 'text-gray-600');
+          });
+          
+          bouton.classList.remove('bg-gray-100', 'text-gray-600');
+          bouton.classList.add('bg-blue-600', 'text-white');
+          
+          contenus.forEach(c => c.classList.add('hidden'));
+          const selectedContent = document.querySelector(`[data-content="${espece}"]`);
+          if (selectedContent) {
+            selectedContent.classList.remove('hidden');
+          }
+        });
+      });
+    });
+  </script>
 </Layout>
